@@ -19,14 +19,14 @@ body {
 }
 
 .white {
-  background-color: #ffffff
+  background-color: #ffffff;
 }
 
 .grid-area {
   display: inline-grid;
   grid-template-columns: repeat(8, 50px);
-  border: 5px solid gray
-  /* transition:  */
+  border: 5px solid gray;
+  /* transition: transform 1s; */
 }
 
 [data-selected="true"] {
