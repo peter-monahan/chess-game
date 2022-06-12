@@ -21,7 +21,7 @@ class Piece {
     this.board.grid[newRow][newCol] = this;
     this.currentCoordinates = newCoordinates;
     this.timesMoved++;
-    [this.board.turn[0], this.board.turn[1]] = [this.board.turn[1], this.board.turn[0]];
+    this.board.update();
     return this
   }
 
@@ -300,6 +300,8 @@ export const piecesObj = {
   'king': class King extends Piece {
     constructor(board, color, startCoordinates) {
       super(board, color, startCoordinates);
+
+      this.board[`${color}King`] = this;
     }
     getLineOfSight() {
       let res = [];
@@ -315,6 +317,31 @@ export const piecesObj = {
       return res;
     }
 
+    getValidMoves() {
+      let res = [];
+      const visibleSquares = this.getLineOfSight();
+
+      visibleSquares.forEach(square => {
+        const [row, col] = square;
+        if(this.board.grid[row][col]) {
+          if (this.board.grid[row][col].color !== this.color) {
+            res.push(square);
+          }
+        } else {
+          res.push(square);
+        }
+      });
+      console.log(this.board.opponentLineOfSight);
+      res = res.filter(square => {
+        console.log(square.join(','));
+        if(this.board.opponentLineOfSight.has(square.join(','))) {
+          return false;
+        } else {
+          return true;
+        }
+      });
+      return res;
+    }
   },
 }
 
