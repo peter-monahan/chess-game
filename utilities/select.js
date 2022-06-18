@@ -9,7 +9,7 @@ export function select(board) {
 
         if(!selected) { // If no piece is selected.
 
-           if (targ.dataset.piece.startsWith(board.turn[0])) { // If it is the clicked pieces turn.
+           if (targ.dataset.piece && targ.dataset.piece.startsWith(board.turn[0])) { // If it is the clicked pieces turn.
              targ.dataset.selected = 'true'; // Update the html elements data-selected to a string of 'true'.
 
              const piece = board.select(targ.id); // Select the piece from the board object.

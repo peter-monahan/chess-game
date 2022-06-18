@@ -5,6 +5,7 @@ class Piece {
     this.startCoordinates = startCoordinates;
     this.currentCoordinates = startCoordinates;
     this.timesMoved = 0;
+    this.validMoves = null;
   }
 
   move(newCoordinates) {
@@ -26,7 +27,7 @@ class Piece {
   }
 
   getValidMoves() {
-    const res = [];
+    let res = [];
     const visibleSquares = this.getLineOfSight();
 
     visibleSquares.forEach(square => {
@@ -39,6 +40,15 @@ class Piece {
         res.push(square);
       }
     });
+
+    if (this.board.checks.length) {
+      if (this.board.checks.length > 1) {
+        res = [];
+      } else {
+        const valid = this.board.checks[0];
+        res = res.filter(el => valid.indexOf(el.join(',')) !== -1);
+      }
+    }
     return res;
   }
 }
@@ -63,16 +73,22 @@ export const piecesObj = {
       }
 
       pairs.forEach(pair => {
-        const [row, col] = pair;
-        if((currRow+row <= 7 && currRow+row >= 0) && (currCol+col <= 7 && currCol+col >= 0)) {
-          res.push([currRow+row, currCol+col]);
+        let [row, col] = pair;
+        row+=currRow;
+        col+=currCol;
+
+        if((row <= 7 && row >= 0) && (col <= 7 && col >= 0)) {
+          if ((this.board.turn[1] === this.color) && (`${row},${col}` === this.board[`${this.board.turn[0]}King`].currentCoordinates.join(','))) {
+            this.board.checks.push([`${currRow},${currCol}`]);
+          }
+          res.push([row, col]);
         }
       });
       return res;
     }
 
     getValidMoves() {
-      const res = [];
+      let res = [];
       const visibleSquares = this.getLineOfSight();
       const [currRow, currCol] = this.currentCoordinates;
       let firstSquare;
@@ -100,6 +116,14 @@ export const piecesObj = {
         }
 
       });
+      if (this.board.checks.length) {
+        if (this.board.checks.length > 1) {
+          res = [];
+        } else {
+          const valid = this.board.checks[0];
+          res = res.filter(el => valid.indexOf(el.join(',')) !== -1);
+        }
+      }
       return res;
     }
   },
@@ -111,39 +135,72 @@ export const piecesObj = {
 
     getLineOfSight () {
       const res = [];
-
-
       let [currRow, currCol] = this.currentCoordinates;
       let currEl = null;
+      let checkArr = [`${currRow},${currCol}`];
 
+      // if (this.board.turn[1] === this.color) {
+      //   let checkArr = [];
+      // }
       while(this.board.grid[currRow-1] && (currEl === null)) {//top
         currRow--;
         currEl = this.board.grid[currRow][currCol];
         res.push([currRow, currCol]);
+        if (this.board.turn[1] === this.color) {
+          if(`${currRow},${currCol}` === this.board[`${this.board.turn[0]}King`].currentCoordinates.join(',')) {
+            this.board.checks.push([...checkArr]);
+          } else {
+            checkArr.push(`${currRow},${currCol}`);
+          }
+        }
       }
       currEl = null;
       [currRow, currCol] = this.currentCoordinates;
+      checkArr = [`${currRow},${currCol}`];
 
       while(this.board.grid[currRow+1] && (currEl === null)) {//bottom
         currRow++;
         currEl = this.board.grid[currRow][currCol];
         res.push([currRow, currCol]);
+        if (this.board.turn[1] === this.color) {
+          if(`${currRow},${currCol}` === this.board[`${this.board.turn[0]}King`].currentCoordinates.join(',')) {
+            this.board.checks.push([...checkArr]);
+          } else {
+            checkArr.push(`${currRow},${currCol}`);
+          }
+        }
       }
       currEl = null;
       [currRow, currCol] = this.currentCoordinates;
+      checkArr = [`${currRow},${currCol}`];
 
       while(this.board.grid[currRow][currCol-1] !== undefined && (currEl === null)) {//left
         currCol--;
         currEl = this.board.grid[currRow][currCol];
         res.push([currRow, currCol]);
+        if (this.board.turn[1] === this.color) {
+          if(`${currRow},${currCol}` === this.board[`${this.board.turn[0]}King`].currentCoordinates.join(',')) {
+            this.board.checks.push([...checkArr]);
+          } else {
+            checkArr.push(`${currRow},${currCol}`);
+          }
+        }
       }
       currEl = null;
       [currRow, currCol] = this.currentCoordinates;
+      checkArr = [`${currRow},${currCol}`];
 
       while(this.board.grid[currRow][currCol+1] !== undefined && (currEl === null)) {//right
         currCol++;
         currEl = this.board.grid[currRow][currCol];
         res.push([currRow, currCol]);
+        if (this.board.turn[1] === this.color) {
+          if(`${currRow},${currCol}` === this.board[`${this.board.turn[0]}King`].currentCoordinates.join(',')) {
+            this.board.checks.push([...checkArr]);
+          } else {
+            checkArr.push(`${currRow},${currCol}`);
+          }
+        }
       }
       return res;
     }
@@ -160,9 +217,14 @@ export const piecesObj = {
       let [currRow, currCol] = this.currentCoordinates;
       let pairs = [[-2, -1], [-2, 1], [-1, -2], [1, -2], [-1, 2], [1, 2], [2, -1], [2, 1]];
       pairs.forEach(pair => {
-        const [row, col] = pair;
-        if((currRow+row <= 7 && currRow+row >= 0) && (currCol+col <= 7 && currCol+col >= 0)) {
-          res.push([currRow+row, currCol+col]);
+        let [row, col] = pair;
+        row+=currRow;
+        col+=currCol;
+        if((row <= 7 && row >= 0) && (col <= 7 && col >= 0)) {
+          if ((this.board.turn[1] === this.color) && (`${row},${col}` === this.board[`${this.board.turn[0]}King`].currentCoordinates.join(','))) {
+            this.board.checks.push([`${currRow},${currCol}`]);
+          }
+          res.push([row, col]);
         }
       });
       return res;
@@ -175,43 +237,77 @@ export const piecesObj = {
     }
     getLineOfSight () {
       const res = [];
-
-
       let [currRow, currCol] = this.currentCoordinates;
       let currEl = null;
+      let checkArr = [`${currRow},${currCol}`];
+
 
       while(this.board.grid[currRow-1] && this.board.grid[currRow-1][currCol-1] !== undefined &&  (currEl === null)) {//top left
         currCol--;
         currRow--;
         currEl = this.board.grid[currRow][currCol];
         res.push([currRow, currCol]);
+        if (this.board.turn[1] === this.color) {
+          if(`${currRow},${currCol}` === this.board[`${this.board.turn[0]}King`].currentCoordinates.join(',')) {
+            this.board.checks.push([...checkArr]);
+          } else {
+            checkArr.push(`${currRow},${currCol}`);
+          }
+        }
       }
       currEl = null;
       [currRow, currCol] = this.currentCoordinates;
+      checkArr = [`${currRow},${currCol}`];
+
 
       while(this.board.grid[currRow-1] && this.board.grid[currRow-1][currCol+1] !== undefined &&  (currEl === null)) {//top right
         currCol++;
         currRow--;
         currEl = this.board.grid[currRow][currCol];
         res.push([currRow, currCol]);
+        if (this.board.turn[1] === this.color) {
+          if(`${currRow},${currCol}` === this.board[`${this.board.turn[0]}King`].currentCoordinates.join(',')) {
+            this.board.checks.push([...checkArr]);
+          } else {
+            checkArr.push(`${currRow},${currCol}`);
+          }
+        }
       }
       currEl = null;
       [currRow, currCol] = this.currentCoordinates;
+      checkArr = [`${currRow},${currCol}`];
+
 
       while(this.board.grid[currRow+1] && this.board.grid[currRow+1][currCol-1] !== undefined &&  (currEl === null)) {//bottom left
         currCol--;
         currRow++;
         currEl = this.board.grid[currRow][currCol];
         res.push([currRow, currCol]);
+        if (this.board.turn[1] === this.color) {
+          if(`${currRow},${currCol}` === this.board[`${this.board.turn[0]}King`].currentCoordinates.join(',')) {
+            this.board.checks.push([...checkArr]);
+          } else {
+            checkArr.push(`${currRow},${currCol}`);
+          }
+        }
       }
       currEl = null;
       [currRow, currCol] = this.currentCoordinates;
+      checkArr = [`${currRow},${currCol}`];
+
 
       while(this.board.grid[currRow+1] && this.board.grid[currRow+1][currCol+1] !== undefined &&  (currEl === null)) {//bottom right
         currCol++;
         currRow++;
         currEl = this.board.grid[currRow][currCol];
         res.push([currRow, currCol]);
+        if (this.board.turn[1] === this.color) {
+          if(`${currRow},${currCol}` === this.board[`${this.board.turn[0]}King`].currentCoordinates.join(',')) {
+            this.board.checks.push([...checkArr]);
+          } else {
+            checkArr.push(`${currRow},${currCol}`);
+          }
+        }
       }
       return res;
     }
@@ -223,75 +319,137 @@ export const piecesObj = {
     }
     getLineOfSight () {
       const res = [];
-
-
       let [currRow, currCol] = this.currentCoordinates;
       let currEl = null;
+      let checkArr = [`${currRow},${currCol}`];
 
       while(this.board.grid[currRow-1] && (currEl === null)) {//top
         currRow--;
         currEl = this.board.grid[currRow][currCol];
         res.push([currRow, currCol]);
+        if (this.board.turn[1] === this.color) {
+          if(`${currRow},${currCol}` === this.board[`${this.board.turn[0]}King`].currentCoordinates.join(',')) {
+            this.board.checks.push([...checkArr]);
+          } else {
+            checkArr.push(`${currRow},${currCol}`);
+          }
+        }
       }
       currEl = null;
       [currRow, currCol] = this.currentCoordinates;
+      checkArr = [`${currRow},${currCol}`];
 
       while(this.board.grid[currRow+1] && (currEl === null)) {//bottom
         currRow++;
         currEl = this.board.grid[currRow][currCol];
         res.push([currRow, currCol]);
+        if (this.board.turn[1] === this.color) {
+          if(`${currRow},${currCol}` === this.board[`${this.board.turn[0]}King`].currentCoordinates.join(',')) {
+            this.board.checks.push([...checkArr]);
+          } else {
+            checkArr.push(`${currRow},${currCol}`);
+          }
+        }
       }
       currEl = null;
       [currRow, currCol] = this.currentCoordinates;
+      checkArr = [`${currRow},${currCol}`];
 
       while(this.board.grid[currRow][currCol-1] !== undefined && (currEl === null)) {//left
         currCol--;
         currEl = this.board.grid[currRow][currCol];
         res.push([currRow, currCol]);
+        if (this.board.turn[1] === this.color) {
+          if(`${currRow},${currCol}` === this.board[`${this.board.turn[0]}King`].currentCoordinates.join(',')) {
+            this.board.checks.push([...checkArr]);
+          } else {
+            checkArr.push(`${currRow},${currCol}`);
+          }
+        }
       }
       currEl = null;
       [currRow, currCol] = this.currentCoordinates;
+      checkArr = [`${currRow},${currCol}`];
 
       while(this.board.grid[currRow][currCol+1] !== undefined && (currEl === null)) {//right
         currCol++;
         currEl = this.board.grid[currRow][currCol];
         res.push([currRow, currCol]);
+        if (this.board.turn[1] === this.color) {
+          if(`${currRow},${currCol}` === this.board[`${this.board.turn[0]}King`].currentCoordinates.join(',')) {
+            this.board.checks.push([...checkArr]);
+          } else {
+            checkArr.push(`${currRow},${currCol}`);
+          }
+        }
       }
       currEl = null;
       [currRow, currCol] = this.currentCoordinates;
+      checkArr = [`${currRow},${currCol}`];
 
       while(this.board.grid[currRow-1] && this.board.grid[currRow-1][currCol-1] !== undefined &&  (currEl === null)) {//top left
         currCol--;
         currRow--;
         currEl = this.board.grid[currRow][currCol];
         res.push([currRow, currCol]);
+        if (this.board.turn[1] === this.color) {
+          if(`${currRow},${currCol}` === this.board[`${this.board.turn[0]}King`].currentCoordinates.join(',')) {
+            this.board.checks.push([...checkArr]);
+          } else {
+            checkArr.push(`${currRow},${currCol}`);
+          }
+        }
       }
       currEl = null;
       [currRow, currCol] = this.currentCoordinates;
+      checkArr = [`${currRow},${currCol}`];
 
       while(this.board.grid[currRow-1] && this.board.grid[currRow-1][currCol+1] !== undefined &&  (currEl === null)) {//top right
         currCol++;
         currRow--;
         currEl = this.board.grid[currRow][currCol];
         res.push([currRow, currCol]);
+        if (this.board.turn[1] === this.color) {
+          if(`${currRow},${currCol}` === this.board[`${this.board.turn[0]}King`].currentCoordinates.join(',')) {
+            this.board.checks.push([...checkArr]);
+          } else {
+            checkArr.push(`${currRow},${currCol}`);
+          }
+        }
       }
       currEl = null;
       [currRow, currCol] = this.currentCoordinates;
+      checkArr = [`${currRow},${currCol}`];
 
       while(this.board.grid[currRow+1] && this.board.grid[currRow+1][currCol-1] !== undefined &&  (currEl === null)) {//bottom left
         currCol--;
         currRow++;
         currEl = this.board.grid[currRow][currCol];
         res.push([currRow, currCol]);
+        if (this.board.turn[1] === this.color) {
+          if(`${currRow},${currCol}` === this.board[`${this.board.turn[0]}King`].currentCoordinates.join(',')) {
+            this.board.checks.push([...checkArr]);
+          } else {
+            checkArr.push(`${currRow},${currCol}`);
+          }
+        }
       }
       currEl = null;
       [currRow, currCol] = this.currentCoordinates;
+      checkArr = [`${currRow},${currCol}`];
 
       while(this.board.grid[currRow+1] && this.board.grid[currRow+1][currCol+1] !== undefined &&  (currEl === null)) {//bottom right
         currCol++;
         currRow++;
         currEl = this.board.grid[currRow][currCol];
         res.push([currRow, currCol]);
+        if (this.board.turn[1] === this.color) {
+          if(`${currRow},${currCol}` === this.board[`${this.board.turn[0]}King`].currentCoordinates.join(',')) {
+            this.board.checks.push([...checkArr]);
+          } else {
+            checkArr.push(`${currRow},${currCol}`);
+          }
+        }
       }
       return res;
     }
@@ -341,6 +499,27 @@ export const piecesObj = {
         }
       });
       return res;
+    }
+
+    checkForPins() {
+      let pinnedMoves;
+      const res = [];
+      let [currRow, currCol] = this.currentCoordinates;
+      let currEl = null;
+      let first = true;
+
+      while(this.board.grid[currRow-1] && (currEl === null)) {//top
+        currRow--;
+        currEl = this.board.grid[currRow][currCol];
+        res.push([currRow, currCol]);
+        if (this.board.turn[1] === this.color) {
+          if(`${currRow},${currCol}` === this.board[`${this.board.turn[0]}King`].currentCoordinates.join(',')) {
+            this.board.checks.push([...checkArr]);
+          } else {
+            checkArr.push(`${currRow},${currCol}`);
+          }
+        }
+      }
     }
   },
 }

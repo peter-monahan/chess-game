@@ -19,6 +19,7 @@ export class Board {
     this.whitePieces = new Set();
     this.whiteKing;
     this.opponentLineOfSight;
+    this.checks = [];
 
     this.turn = ['white', 'black'];
 
@@ -46,27 +47,29 @@ export class Board {
 
   select(coordStr) {
     const [row, col] = coordStr.split(',');
+
     return this.grid[row][col];
   }
 
   update() {
-    const linesOfSight = new Set();
-    const king = this[`${this.turn[1]}King`];
+    [this.turn[0], this.turn[1]] = [this.turn[1], this.turn[0]];
+    this.checks = [];
+    this.opponentLineOfSight = new Set();
+    const king = this[`${this.turn[0]}King`];
     const [kingRow, kingCol] = king.currentCoordinates;
     this.grid[kingRow][kingCol] = null;
-    // console.log(this[`${this.turn[0]}King`]);
 
-    this[`${this.turn[0]}Pieces`].forEach(piece => {
+    this[`${this.turn[1]}Pieces`].forEach(piece => {
       let pieceSight = piece.getLineOfSight();
       pieceSight = pieceSight.forEach(coord => {
         let square = coord.join(',');
-        linesOfSight.add(square);
+        this.opponentLineOfSight.add(square);
       });
     });
 
-    this.opponentLineOfSight = linesOfSight;
+    console.log(this.checks);
     this.grid[kingRow][kingCol] = king;
-    [this.turn[0], this.turn[1]] = [this.turn[1], this.turn[0]];
+
   }
 }
 
