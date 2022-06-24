@@ -59,7 +59,29 @@ export function select(board) {
             validSquare.dataset.valid = 'false';
           });
           selected.element.dataset.selected = 'false';
+          if (targ.dataset.piece && targ.dataset.piece.startsWith(board.turn[0]) && selected.element !== targ) {
+            selected = null;
+            targ.dataset.selected = 'true'; // Update the html elements data-selected to a string of 'true'.
+
+             const piece = board.select(targ.id); // Select the piece from the board object.
+
+             let validMoves = piece.validMoves; // Get the valid moves of the piece.
+
+             validMoves = validMoves.map(el => el.join(',')); // Change each valid move into a string so as to target the grid id's.
+
+             validMoves.forEach(id => { // Update each valid html square's data-valid to a string of 'true'.
+               const validSquare = document.getElementById(id);
+               validSquare.dataset.valid = 'true';
+             });
+
+             selected = { // Save important information to the 'selected' variable.
+               'element': targ,
+               'pieceObj': piece,
+               'pieceValidMoves': validMoves
+              };
+          } else {
           selected = null;
+          }
          }
      });
 }
