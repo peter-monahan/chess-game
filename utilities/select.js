@@ -14,7 +14,7 @@ export function select(board) {
 
              const piece = board.select(targ.id); // Select the piece from the board object.
 
-             let validMoves = piece.getValidMoves(); // Get the valid moves of the piece.
+             let validMoves = piece.validMoves; // Get the valid moves of the piece.
 
              validMoves = validMoves.map(el => el.join(',')); // Change each valid move into a string so as to target the grid id's.
 

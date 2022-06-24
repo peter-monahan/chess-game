@@ -18,13 +18,14 @@ export class Board {
     this.blackKing;
     this.whitePieces = new Set();
     this.whiteKing;
-    this.opponentLineOfSight;
+    this.opponentLineOfSight = [];
     this.checks = [];
     this.pinnedPieces = {};
 
     this.turn = ['white', 'black'];
 
     this.populate(map);
+    this.whitePieces.forEach(piece => piece.getValidMoves());
   }
 
   populate(map) {
@@ -74,6 +75,7 @@ export class Board {
     console.log(this.checks);
     this.grid[kingRow][kingCol] = king;
 
+    this[`${this.turn[0]}Pieces`].forEach(piece => piece.getValidMoves())
   }
 }
 
