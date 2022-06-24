@@ -20,6 +20,7 @@ export class Board {
     this.whiteKing;
     this.opponentLineOfSight;
     this.checks = [];
+    this.pinnedPieces = {};
 
     this.turn = ['white', 'black'];
 
@@ -55,12 +56,15 @@ export class Board {
     [this.turn[0], this.turn[1]] = [this.turn[1], this.turn[0]];
     this.checks = [];
     this.opponentLineOfSight = new Set();
+
     const king = this[`${this.turn[0]}King`];
     const [kingRow, kingCol] = king.currentCoordinates;
+    this.pinnedPieces = king.checkForPins();
     this.grid[kingRow][kingCol] = null;
 
     this[`${this.turn[1]}Pieces`].forEach(piece => {
       let pieceSight = piece.getLineOfSight();
+
       pieceSight = pieceSight.forEach(coord => {
         let square = coord.join(',');
         this.opponentLineOfSight.add(square);

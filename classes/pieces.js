@@ -49,6 +49,9 @@ class Piece {
         res = res.filter(el => valid.indexOf(el.join(',')) !== -1);
       }
     }
+    if (this.board.pinnedPieces[this.currentCoordinates.join(',')]) {
+      res = res.filter(el => this.board.pinnedPieces[this.currentCoordinates.join(',')].includes(el.join(',')));
+    }
     return res;
   }
 }
@@ -124,6 +127,9 @@ export const piecesObj = {
           res = res.filter(el => valid.indexOf(el.join(',')) !== -1);
         }
       }
+     if (this.board.pinnedPieces[this.currentCoordinates.join(',')]) {
+      res = res.filter(el => this.board.pinnedPieces[this.currentCoordinates.join(',')].includes(el.join(',')));
+     }
       return res;
     }
   },
@@ -502,24 +508,39 @@ export const piecesObj = {
     }
 
     checkForPins() {
-      let pinnedMoves;
-      const res = [];
-      let [currRow, currCol] = this.currentCoordinates;
-      let currEl = null;
-      let first = true;
+      let pairs = [[['Bishop', 'Queen'], [[1,-1], [1, 1], [-1, -1], [-1, 1]]], [['Rook', 'Queen'], [[-1, 0], [1, 0], [0, -1], [0, 1]]]];
+      let res = {};
 
-      while(this.board.grid[currRow-1] && (currEl === null)) {//top
-        currRow--;
-        currEl = this.board.grid[currRow][currCol];
-        res.push([currRow, currCol]);
-        if (this.board.turn[1] === this.color) {
-          if(`${currRow},${currCol}` === this.board[`${this.board.turn[0]}King`].currentCoordinates.join(',')) {
-            this.board.checks.push([...checkArr]);
-          } else {
-            checkArr.push(`${currRow},${currCol}`);
+      for (let i = 0; i < pairs.length; i++) {
+        const [threats, directions] = pairs[i];
+        for (let j = 0; j < directions.length; j++) {
+          const [rowDir, colDir] = directions[j];
+          let [row, col] = this.currentCoordinates;
+          const pinnedMoves = [];
+          const pieces = [];
+          console.log(rowDir, colDir);
+          console.log(row, col);
+
+
+          while(this.board.grid[row+rowDir] && this.board.grid[row+rowDir][col+colDir] !== undefined && pieces.length < 2) {
+            row += rowDir;
+            col += colDir;
+
+            pinnedMoves.push(`${row},${col}`);
+            console.log(pinnedMoves);
+
+            if(this.board.grid[row][col]) {
+              pieces.push(this.board.grid[row][col]);
+              console.log(pieces);
+            }
+          }
+          if((pieces.length === 2) && (pieces[0].color === this.color) && (pieces[1].color !== this.color) && (threats.includes(pieces[1].constructor.name))) {
+            res[pieces[0].currentCoordinates.join(',')] = pinnedMoves;
           }
         }
       }
+      console.log(res);
+      return res;
     }
   },
 }
