@@ -49,7 +49,7 @@ transform: rotate(180deg);
   border: 2px solid lawngreen;
 }
 
-[data-piece="black,pawn" ] {
+[data-piece="black,Pawn" ] {
   background-image: url(./imgs/blackPieces/blackPawn.png);
   background-size:cover;
   background-repeat: no-repeat;
@@ -57,77 +57,77 @@ transform: rotate(180deg);
 }
 
 
-[data-piece="white,pawn"] {
+[data-piece="white,Pawn"] {
   background-image: url(./imgs/whitePieces/whitePawn.png);
   background-size:cover;
   background-repeat: no-repeat;
   background-position: 50%;
 }
 
-[data-piece="black,rook"] {
+[data-piece="black,Rook"] {
   background-image: url(./imgs/blackPieces/blackRook.png);
   background-size:cover;
   background-repeat: no-repeat;
   background-position: 50%;
 }
 
-[data-piece="white,rook"] {
+[data-piece="white,Rook"] {
   background-image: url(./imgs/whitePieces/whiteRook.png);
   background-size:cover;
   background-repeat: no-repeat;
   background-position: 50%;
 }
 
-[data-piece="black,knight"] {
+[data-piece="black,Knight"] {
   background-image: url(./imgs/blackPieces/blackKnight.png);
   background-size:cover;
   background-repeat: no-repeat;
   background-position: 50%;
 }
 
-[data-piece="white,knight"] {
+[data-piece="white,Knight"] {
   background-image: url(./imgs/whitePieces/whiteKnight.png);
   background-size:cover;
   background-repeat: no-repeat;
   background-position: 50%;
 }
 
-[data-piece="black,bishop"] {
+[data-piece="black,Bishop"] {
   background-image: url(./imgs/blackPieces/blackBishop.png);
   background-size:cover;
   background-repeat: no-repeat;
   background-position: 50%;
 }
 
-[data-piece="white,bishop"] {
+[data-piece="white,Bishop"] {
   background-image: url(./imgs/whitePieces/whiteBishop.png);
   background-size:cover;
   background-repeat: no-repeat;
   background-position: 50%;
 }
 
-[data-piece="black,queen"] {
+[data-piece="black,Queen"] {
   background-image: url(./imgs/blackPieces/blackQueen.png);
   background-size:cover;
   background-repeat: no-repeat;
   background-position: 50%;
 }
 
-[data-piece="white,queen"] {
+[data-piece="white,Queen"] {
   background-image: url(./imgs/whitePieces/whiteQueen.png);
   background-size:cover;
   background-repeat: no-repeat;
   background-position: 50%;
 }
 
-[data-piece="black,king"] {
+[data-piece="black,King"] {
   background-image: url(./imgs/blackPieces/blackKing.png);
   background-size:cover;
   background-repeat: no-repeat;
   background-position: 50%;
 }
 
-[data-piece="white,king"] {
+[data-piece="white,King"] {
   background-image: url(./imgs/whitePieces/whiteKing.png);
   background-size:cover;
   background-repeat: no-repeat;

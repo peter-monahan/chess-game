@@ -61,9 +61,42 @@ class Piece {
 
 
 export const piecesObj = {
-  'pawn': class Pawn extends Piece {
+  'Pawn': class Pawn extends Piece {
     constructor(board, color, startCoordinates) {
       super(board, color, startCoordinates);
+
+      this.enPassantable = false;
+      this.doubleMove = null;
+      this.enPassantMove = {};
+    }
+
+    move(newCoordinates) {
+      const [currRow, currCol] = this.currentCoordinates;
+      const [newRow, newCol] = newCoordinates;
+      let oldPiece;
+
+      if(newCoordinates.join(',') === this.doubleMove) {
+        this.enPassantable = true;
+      } else if (this.enPassantMove[newCoordinates.join(',')]) {
+        oldPiece = this.enPassantMove[newCoordinates.join(',')];
+        const [oldRow, oldCol] = oldPiece.currentCoordinates;
+        this.board.grid[oldRow][oldCol] = null;
+      } else {
+        oldPiece = this.board.grid[newRow][newCol];
+      }
+
+      if (oldPiece) {
+        this.board[`${oldPiece.color}Pieces`].delete(oldPiece);
+        this.board.pieces.delete(oldPiece);
+      }
+
+      this.board.grid[currRow][currCol] = null;
+      this.board.grid[newRow][newCol] = this;
+      this.currentCoordinates = newCoordinates;
+      this.timesMoved++;
+      console.log(this.board.grid);
+      this.board.update();
+      return this
     }
 
     getLineOfSight() {
@@ -92,6 +125,12 @@ export const piecesObj = {
     }
 
     getValidMoves() {
+      this.doubleMove = null;
+      this.enPassantMove = {};
+      if(this.color === this.board.turn[0]) {
+        this.enPassantable = false;
+      }
+
       let res = [];
       const visibleSquares = this.getLineOfSight();
       const [currRow, currCol] = this.currentCoordinates;
@@ -109,14 +148,21 @@ export const piecesObj = {
         res.push([currRow+firstSquare, currCol]);
         if(this.board.grid[currRow+secondSquare][currCol] === null && this.timesMoved === 0) {
           res.push([currRow+secondSquare, currCol]);
+          this.doubleMove = `${currRow+secondSquare},${currCol}`
         }
       }
       visibleSquares.forEach(square => {
         const [row, col] = square;
-        if(this.board.grid[row][col]) {
-          if (this.board.grid[row][col].color !== this.color) {
-            res.push(square);
-          }
+        // console.log(this.board.grid[row][currCol])
+        // console.log(this.board.grid[row][currCol].enPassantable)
+        // console.log(square)
+
+        if(this.board.grid[row][col] && this.board.grid[row][col].color !== this.color) {
+          res.push(square);
+
+        } else if (this.board.grid[currRow][col] && this.board.grid[currRow][col].color !== this.color && this.board.grid[currRow][col].enPassantable) {
+          res.push(square);
+          this.enPassantMove[square.join(',')] = this.board.grid[currRow][col];
         }
 
       });
@@ -131,12 +177,14 @@ export const piecesObj = {
      if (this.board.pinnedPieces[this.currentCoordinates.join(',')]) {
       res = res.filter(el => this.board.pinnedPieces[this.currentCoordinates.join(',')].includes(el.join(',')));
      }
+     console.log(this.doubleMove);
+     console.log(this.enPassantMove);
       this.validMoves = res;
       return res;
     }
   },
 
-  'rook': class Rook extends Piece {
+  'Rook': class Rook extends Piece {
     constructor(board, color, startCoordinates) {
       super(board, color, startCoordinates);
 
@@ -172,7 +220,7 @@ export const piecesObj = {
 
   },
 
-  'knight': class Knight extends Piece {
+  'Knight': class Knight extends Piece {
     constructor(board, color, startCoordinates) {
       super(board, color, startCoordinates);
     }
@@ -196,7 +244,7 @@ export const piecesObj = {
     }
   },
 
-  'bishop': class Bishop extends Piece {
+  'Bishop': class Bishop extends Piece {
     constructor(board, color, startCoordinates) {
       super(board, color, startCoordinates);
 
@@ -230,7 +278,7 @@ export const piecesObj = {
     }
   },
 
-  'queen': class Queen extends Piece {
+  'Queen': class Queen extends Piece {
     constructor(board, color, startCoordinates) {
       super(board, color, startCoordinates);
 
@@ -264,7 +312,7 @@ export const piecesObj = {
     }
   },
 
-  'king': class King extends Piece {
+  'King': class King extends Piece {
     constructor(board, color, startCoordinates) {
       super(board, color, startCoordinates);
 
@@ -298,9 +346,7 @@ export const piecesObj = {
           res.push(square);
         }
       });
-      console.log(this.board.opponentLineOfSight);
       res = res.filter(square => {
-        console.log(square.join(','));
         if(this.board.opponentLineOfSight.has(square.join(','))) {
           return false;
         } else {
@@ -322,8 +368,6 @@ export const piecesObj = {
           let [row, col] = this.currentCoordinates;
           const pinnedMoves = [];
           const pieces = [];
-          console.log(rowDir, colDir);
-          console.log(row, col);
 
 
           while(this.board.grid[row+rowDir] && this.board.grid[row+rowDir][col+colDir] !== undefined && pieces.length < 2) {
@@ -331,11 +375,9 @@ export const piecesObj = {
             col += colDir;
 
             pinnedMoves.push(`${row},${col}`);
-            console.log(pinnedMoves);
 
             if(this.board.grid[row][col]) {
               pieces.push(this.board.grid[row][col]);
-              console.log(pieces);
             }
           }
           if((pieces.length === 2) && (pieces[0].color === this.color) && (pieces[1].color !== this.color) && (threats.includes(pieces[1].constructor.name))) {
@@ -343,7 +385,6 @@ export const piecesObj = {
           }
         }
       }
-      console.log(res);
       return res;
     }
   },

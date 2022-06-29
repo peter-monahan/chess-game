@@ -35,6 +35,7 @@ export class Board {
         for (const colKey in col) {
             const [color, type] = col[colKey].split(',');
             const piece = new piecesObj[type](this, color, [Number(rowKey), Number(colKey)]);
+            console.log(piece.constructor.name)
             this.grid[rowKey][colKey] = piece;
             this.pieces.add(piece);
             if (color === 'black') {
@@ -72,7 +73,6 @@ export class Board {
       });
     });
 
-    console.log(this.checks);
     this.grid[kingRow][kingCol] = king;
 
     this[`${this.turn[0]}Pieces`].forEach(piece => piece.getValidMoves())
