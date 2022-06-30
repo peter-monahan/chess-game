@@ -23,7 +23,7 @@ export function selectAndMove(board) {
 
              let validMoves = piece.validMoves; // Get the valid moves of the piece.
 
-             validMoves = validMoves.map(el => el.join(',')); // Change each valid move into a string so as to target the grid id's.
+            //  validMoves = validMoves.map(el => el.join(',')); // Change each valid move into a string so as to target the grid id's.
 
              validMoves.forEach(id => { // Update each valid html square's data-valid to a string of 'true'.
                const validSquare = document.getElementById(id);

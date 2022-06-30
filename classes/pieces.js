@@ -34,10 +34,10 @@ class Piece {
       const [row, col] = square;
       if(this.board.grid[row][col]) {
         if (this.board.grid[row][col].color !== this.color) {
-          res.push(square);
+          res.push(square.join(','));
         }
       } else {
-        res.push(square);
+        res.push(square.join(','));
       }
     });
 
@@ -46,11 +46,11 @@ class Piece {
         res = [];
       } else {
         const valid = this.board.checks[0];
-        res = res.filter(el => valid.indexOf(el.join(',')) !== -1);
+        res = res.filter(el => valid.includes(el));
       }
     }
     if (this.board.pinnedPieces[this.currentCoordinates.join(',')]) {
-      res = res.filter(el => this.board.pinnedPieces[this.currentCoordinates.join(',')].includes(el.join(',')));
+      res = res.filter(el => this.board.pinnedPieces[this.currentCoordinates.join(',')].includes(el));
     }
     this.validMoves = res;
     return res;
@@ -94,7 +94,6 @@ export const piecesObj = {
       this.board.grid[newRow][newCol] = this;
       this.currentCoordinates = newCoordinates;
       this.timesMoved++;
-      console.log(this.board.grid);
       this.board.update();
       return this
     }
@@ -145,23 +144,20 @@ export const piecesObj = {
       }
 
       if(this.board.grid[currRow+firstSquare][currCol] === null) {
-        res.push([currRow+firstSquare, currCol]);
+        res.push([currRow+firstSquare, currCol].join(','));
         if(this.board.grid[currRow+secondSquare][currCol] === null && this.timesMoved === 0) {
-          res.push([currRow+secondSquare, currCol]);
+          res.push([currRow+secondSquare, currCol].join(','));
           this.doubleMove = `${currRow+secondSquare},${currCol}`
         }
       }
       visibleSquares.forEach(square => {
         const [row, col] = square;
-        // console.log(this.board.grid[row][currCol])
-        // console.log(this.board.grid[row][currCol].enPassantable)
-        // console.log(square)
 
         if(this.board.grid[row][col] && this.board.grid[row][col].color !== this.color) {
-          res.push(square);
+          res.push(square.join(','));
 
         } else if (this.board.grid[currRow][col] && this.board.grid[currRow][col].color !== this.color && this.board.grid[currRow][col].enPassantable) {
-          res.push(square);
+          res.push(square.join(','));
           this.enPassantMove[square.join(',')] = this.board.grid[currRow][col];
         }
 
@@ -171,14 +167,13 @@ export const piecesObj = {
           res = [];
         } else {
           const valid = this.board.checks[0];
-          res = res.filter(el => valid.indexOf(el.join(',')) !== -1);
+          res = res.filter(el => valid.includes(el));
         }
       }
      if (this.board.pinnedPieces[this.currentCoordinates.join(',')]) {
-      res = res.filter(el => this.board.pinnedPieces[this.currentCoordinates.join(',')].includes(el.join(',')));
+      res = res.filter(el => this.board.pinnedPieces[this.currentCoordinates.join(',')].includes(el));
      }
-     console.log(this.doubleMove);
-     console.log(this.enPassantMove);
+
       this.validMoves = res;
       return res;
     }
@@ -316,8 +311,39 @@ export const piecesObj = {
     constructor(board, color, startCoordinates) {
       super(board, color, startCoordinates);
 
+      this.castleMove = {};
       this.board[`${color}King`] = this;
     }
+
+    move(newCoordinates) {
+      const [currRow, currCol] = this.currentCoordinates;
+      const [newRow, newCol] = newCoordinates;
+      const oldPiece = this.board.grid[newRow][newCol];
+
+      if(this.castleMove[newCoordinates.join(',')]) {
+        const rook = this.castleMove[newCoordinates.join(',')].piece;
+        const [rookRow, rookCol] = this.castleMove[newCoordinates.join(',')].spot;
+        const [oldRookRow, oldRookCol] = rook.currentCoordinates;
+
+        this.board.grid[oldRookRow][oldRookCol] = null;
+        this.board.grid[rookRow][rookCol] = rook;
+        rook.currentCoordinates = this.castleMove[newCoordinates.join(',')].spot;
+        rook.timesMoved++;
+      }
+
+      if (oldPiece) {
+        this.board[`${oldPiece.color}Pieces`].delete(oldPiece);
+        this.board.pieces.delete(oldPiece);
+      }
+
+      this.board.grid[currRow][currCol] = null;
+      this.board.grid[newRow][newCol] = this;
+      this.currentCoordinates = newCoordinates;
+      this.timesMoved++;
+      this.board.update();
+      return this
+    }
+
     getLineOfSight() {
       let res = [];
       let [currRow, currCol] = this.currentCoordinates;
@@ -333,26 +359,52 @@ export const piecesObj = {
     }
 
     getValidMoves() {
+      this.castleMove = {};
       let res = [];
       const visibleSquares = this.getLineOfSight();
 
       visibleSquares.forEach(square => {
         const [row, col] = square;
-        if(this.board.grid[row][col]) {
-          if (this.board.grid[row][col].color !== this.color) {
-            res.push(square);
-          }
-        } else {
-          res.push(square);
+        if( !(this.board.grid[row][col]) || (this.board.grid[row][col].color !== this.color) ) {
+          res.push(square.join(','));
         }
       });
+
       res = res.filter(square => {
-        if(this.board.opponentLineOfSight.has(square.join(','))) {
+        if(this.board.opponentLineOfSight.has(square)) {
           return false;
         } else {
           return true;
         }
       });
+
+      if (this.timesMoved === 0) {
+        const leftRight = [-1, 1];
+
+        leftRight.forEach(direction => {
+          let [row, col] = this.currentCoordinates;
+          const castleMove = `${row},${(direction * 2) + col}`;
+          const dependantMove = `${row},${direction + col}`;
+          let foundPiece;
+
+          while(this.board.grid[row][col+direction] !== undefined && !foundPiece) {
+            col += direction;
+
+            if(this.board.grid[row][col]) {
+              foundPiece = this.board.grid[row][col];
+            }
+          }
+          if(foundPiece && foundPiece.constructor.name === 'Rook' && foundPiece.timesMoved === 0) {
+            if(res.includes(dependantMove) && !(this.board.opponentLineOfSight.has(castleMove))) {
+              this.castleMove[castleMove] = {piece: foundPiece, spot: dependantMove.split(',').map(el => Number(el))};
+              res.push(castleMove);
+            }
+          }
+
+        });
+      }
+
+
       this.validMoves = res;
       return res;
     }
