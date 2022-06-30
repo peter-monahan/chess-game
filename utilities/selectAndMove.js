@@ -32,7 +32,8 @@ export function selectAndMove(board) {
 
              selected = { // Save important information to the 'selected' variable.
                'pieceObj': piece,
-               'pieceValidMoves': validMoves
+               'pieceValidMoves': validMoves,
+               'element': targ
               };
           } else {
           selected = null;
