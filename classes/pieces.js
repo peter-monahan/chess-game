@@ -22,8 +22,7 @@ class Piece {
     this.board.grid[newRow][newCol] = this;
     this.currentCoordinates = newCoordinates;
     this.timesMoved++;
-    this.board.update();
-    return this
+    return false
   }
 
   getValidMoves() {
@@ -57,20 +56,83 @@ class Piece {
   }
 }
 
+class LongRangePiece extends Piece {
+  constructor(board, color, startCoordinates) {
+    super(board, color, startCoordinates);
+  }
+
+  getLineOfSight () {
+    const res = [];
+
+    for (let i = 0; i < this.directions.length; i++) {
+      const [rowDir, colDir] = this.directions[i];
+      let [row, col] = this.currentCoordinates;
+      let checkArr = [`${row},${col}`];
+      let currEl = null;
+
+      while(this.board.grid[row+rowDir] && this.board.grid[row+rowDir][col+colDir] !== undefined && (currEl === null)) {
+        row += rowDir;
+        col += colDir;
+
+        currEl = this.board.grid[row][col];
+        res.push([row, col]);
+        if (this.board.turn[1] === this.color) {
+          if(`${row},${col}` === this.board[`${this.board.turn[0]}King`].currentCoordinates.join(',')) {
+            this.board.checks.push([...checkArr]);
+          } else {
+            checkArr.push(`${row},${col}`);
+          }
+        }
+      }
+    }
+    return res;
+  }
+}
+
+class ShortRangePiece extends Piece {
+  constructor(board, color, startCoordinates) {
+    super(board, color, startCoordinates);
+  }
+
+  getLineOfSight() {
+    let res = [];
+    let [currRow, currCol] = this.currentCoordinates;
+
+    this.pairs.forEach(pair => {
+      let [row, col] = pair;
+      row+=currRow;
+      col+=currCol;
+
+      if((row <= 7 && row >= 0) && (col <= 7 && col >= 0)) {
+        if ((this.board.turn[1] === this.color) && (`${row},${col}` === this.board[`${this.board.turn[0]}King`].currentCoordinates.join(','))) {
+          this.board.checks.push([`${currRow},${currCol}`]);
+        }
+        res.push([row, col]);
+      }
+    });
+    return res;
+  }
+}
 
 
 
 export const piecesObj = {
-  'Pawn': class Pawn extends Piece {
+  'Pawn': class Pawn extends ShortRangePiece {
     constructor(board, color, startCoordinates) {
       super(board, color, startCoordinates);
 
       this.enPassantable = false;
       this.doubleMove = null;
       this.enPassantMove = {};
+      if (this.color === 'black') {
+        this.pairs = [[1, -1], [1, 1]]
+      } else if (this.color === 'white') {
+        this.pairs = [[-1, -1], [-1, 1]]
+      }
     }
 
     move(newCoordinates) {
+      let upgradeBool = false;
       const [currRow, currCol] = this.currentCoordinates;
       const [newRow, newCol] = newCoordinates;
       let oldPiece;
@@ -94,33 +156,14 @@ export const piecesObj = {
       this.board.grid[newRow][newCol] = this;
       this.currentCoordinates = newCoordinates;
       this.timesMoved++;
-      this.board.update();
-      return this
-    }
 
-    getLineOfSight() {
-      let res = [];
-      let [currRow, currCol] = this.currentCoordinates;
-      let pairs;
-      if (this.color === 'black') {
-        pairs = [[1, -1], [1, 1]]
-      } else if (this.color === 'white') {
-        pairs = [[-1, -1], [-1, 1]]
+      if(this.color === 'white' && this.currentCoordinates[0] === 0) {
+        upgradeBool = true;
+      } else if (this.color === 'black' && this.currentCoordinates[0] === 7){
+        upgradeBool = true;
       }
 
-      pairs.forEach(pair => {
-        let [row, col] = pair;
-        row+=currRow;
-        col+=currCol;
-
-        if((row <= 7 && row >= 0) && (col <= 7 && col >= 0)) {
-          if ((this.board.turn[1] === this.color) && (`${row},${col}` === this.board[`${this.board.turn[0]}King`].currentCoordinates.join(','))) {
-            this.board.checks.push([`${currRow},${currCol}`]);
-          }
-          res.push([row, col]);
-        }
-      });
-      return res;
+      return upgradeBool;
     }
 
     getValidMoves() {
@@ -145,7 +188,7 @@ export const piecesObj = {
 
       if(this.board.grid[currRow+firstSquare][currCol] === null) {
         res.push([currRow+firstSquare, currCol].join(','));
-        if(this.board.grid[currRow+secondSquare][currCol] === null && this.timesMoved === 0) {
+        if(this.timesMoved === 0 && this.board.grid[currRow+secondSquare][currCol] === null) {
           res.push([currRow+secondSquare, currCol].join(','));
           this.doubleMove = `${currRow+secondSquare},${currCol}`
         }
@@ -179,140 +222,45 @@ export const piecesObj = {
     }
   },
 
-  'Rook': class Rook extends Piece {
+  'Rook': class Rook extends LongRangePiece {
     constructor(board, color, startCoordinates) {
       super(board, color, startCoordinates);
 
       this.directions = [[-1, 0], [1, 0], [0, -1], [0, 1]];
     }
-
-    getLineOfSight () {
-      const res = [];
-
-      for (let i = 0; i < this.directions.length; i++) {
-        const [rowDir, colDir] = this.directions[i];
-        let [row, col] = this.currentCoordinates;
-        let checkArr = [`${row},${col}`];
-        let currEl = null;
-
-        while(this.board.grid[row+rowDir] && this.board.grid[row+rowDir][col+colDir] !== undefined && (currEl === null)) {
-          row += rowDir;
-          col += colDir;
-
-          currEl = this.board.grid[row][col];
-          res.push([row, col]);
-          if (this.board.turn[1] === this.color) {
-            if(`${row},${col}` === this.board[`${this.board.turn[0]}King`].currentCoordinates.join(',')) {
-              this.board.checks.push([...checkArr]);
-            } else {
-              checkArr.push(`${row},${col}`);
-            }
-          }
-        }
-      }
-      return res;
-    }
-
   },
 
-  'Knight': class Knight extends Piece {
+  'Knight': class Knight extends ShortRangePiece {
     constructor(board, color, startCoordinates) {
       super(board, color, startCoordinates);
-    }
 
-    getLineOfSight() {
-      let res = [];
-      let [currRow, currCol] = this.currentCoordinates;
-      let pairs = [[-2, -1], [-2, 1], [-1, -2], [1, -2], [-1, 2], [1, 2], [2, -1], [2, 1]];
-      pairs.forEach(pair => {
-        let [row, col] = pair;
-        row+=currRow;
-        col+=currCol;
-        if((row <= 7 && row >= 0) && (col <= 7 && col >= 0)) {
-          if ((this.board.turn[1] === this.color) && (`${row},${col}` === this.board[`${this.board.turn[0]}King`].currentCoordinates.join(','))) {
-            this.board.checks.push([`${currRow},${currCol}`]);
-          }
-          res.push([row, col]);
-        }
-      });
-      return res;
+      this.pairs = [[-2, -1], [-2, 1], [-1, -2], [1, -2], [-1, 2], [1, 2], [2, -1], [2, 1]];
     }
   },
 
-  'Bishop': class Bishop extends Piece {
+  'Bishop': class Bishop extends LongRangePiece {
     constructor(board, color, startCoordinates) {
       super(board, color, startCoordinates);
 
       this.directions = [[1,-1], [1, 1], [-1, -1], [-1, 1]];
     }
-    getLineOfSight () {
-      const res = [];
-
-      for (let i = 0; i < this.directions.length; i++) {
-        const [rowDir, colDir] = this.directions[i];
-        let [row, col] = this.currentCoordinates;
-        let checkArr = [`${row},${col}`];
-        let currEl = null;
-
-        while(this.board.grid[row+rowDir] && this.board.grid[row+rowDir][col+colDir] !== undefined && (currEl === null)) {
-          row += rowDir;
-          col += colDir;
-
-          currEl = this.board.grid[row][col];
-          res.push([row, col]);
-          if (this.board.turn[1] === this.color) {
-            if(`${row},${col}` === this.board[`${this.board.turn[0]}King`].currentCoordinates.join(',')) {
-              this.board.checks.push([...checkArr]);
-            } else {
-              checkArr.push(`${row},${col}`);
-            }
-          }
-        }
-      }
-      return res;
-    }
   },
 
-  'Queen': class Queen extends Piece {
+  'Queen': class Queen extends LongRangePiece {
     constructor(board, color, startCoordinates) {
       super(board, color, startCoordinates);
 
       this.directions = [[-1, 0], [1, 0], [0, -1], [0, 1], [1,-1], [1, 1], [-1, -1], [-1, 1]];
     }
-    getLineOfSight () {
-      const res = [];
-
-      for (let i = 0; i < this.directions.length; i++) {
-        const [rowDir, colDir] = this.directions[i];
-        let [row, col] = this.currentCoordinates;
-        let checkArr = [`${row},${col}`];
-        let currEl = null;
-
-        while(this.board.grid[row+rowDir] && this.board.grid[row+rowDir][col+colDir] !== undefined && (currEl === null)) {
-          row += rowDir;
-          col += colDir;
-
-          currEl = this.board.grid[row][col];
-          res.push([row, col]);
-          if (this.board.turn[1] === this.color) {
-            if(`${row},${col}` === this.board[`${this.board.turn[0]}King`].currentCoordinates.join(',')) {
-              this.board.checks.push([...checkArr]);
-            } else {
-              checkArr.push(`${row},${col}`);
-            }
-          }
-        }
-      }
-      return res;
-    }
   },
 
-  'King': class King extends Piece {
+  'King': class King extends ShortRangePiece {
     constructor(board, color, startCoordinates) {
       super(board, color, startCoordinates);
 
       this.castleMove = {};
       this.board[`${color}King`] = this;
+      this.pairs = [[1,-1], [1, 1], [-1, -1], [-1, 1], [-1, 0], [1, 0], [0, -1], [0, 1]];
     }
 
     move(newCoordinates) {
@@ -340,22 +288,7 @@ export const piecesObj = {
       this.board.grid[newRow][newCol] = this;
       this.currentCoordinates = newCoordinates;
       this.timesMoved++;
-      this.board.update();
-      return this
-    }
-
-    getLineOfSight() {
-      let res = [];
-      let [currRow, currCol] = this.currentCoordinates;
-      let pairs = [[1,-1], [1, 1], [-1, -1], [-1, 1], [-1, 0], [1, 0], [0, -1], [0, 1]];
-
-      pairs.forEach(pair => {
-        const [row, col] = pair;
-        if((currRow+row <= 7 && currRow+row >= 0) && (currCol+col <= 7 && currCol+col >= 0)) {
-          res.push([currRow+row, currCol+col]);
-        }
-      });
-      return res;
+      return false;
     }
 
     getValidMoves() {

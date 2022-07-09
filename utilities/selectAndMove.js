@@ -1,17 +1,22 @@
 import { updateBoard } from "./updateBoard.js";
-
-let selected = null; // Variable that will contain information about the selected piece. Null if no piece is selected.
+import { upgradePiece } from "./upgradePiece.js";
 
 export function selectAndMove(board) {
   const gridDiv = document.querySelector('.grid-area'); // Grabbing the chess board container.
+  let selected = null; // Variable that will contain information about the selected piece. Null if no piece is selected.
 
 
       gridDiv.addEventListener('click', e => { // Adding an event listener for clicks on the chess board.
          const targ = e.target; // Grabbing the 'target' of the click and saving it to a variable.
 
-        if (targ.dataset.valid === 'true'){
-            selected.pieceObj.move(targ.id.split(',').map(el => Number(el)));
-            updateBoard(board, gridDiv);
+        if (targ.dataset.valid === 'true' && selected && selected.pieceValidMoves.includes(targ.id)){
+            const upgradeBool = selected.pieceObj.move(targ.id.split(',').map(el => Number(el)));
+            if(upgradeBool) {
+              upgradePiece(gridDiv, selected.pieceObj);
+            } else {
+              board.update()
+              updateBoard(board, gridDiv);
+            }
             selected = null;
          } else {
           updateBoard(board, gridDiv);

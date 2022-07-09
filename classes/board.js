@@ -13,6 +13,7 @@ export class Board {
       [null, null, null, null, null, null, null, null]
     ];
 
+    this.piecesObj = piecesObj;
     this.pieces = new Set();
     this.blackPieces = new Set();
     this.blackKing;
